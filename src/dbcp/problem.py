@@ -73,10 +73,16 @@ class BiconvexProblem(cp.Problem):
         while True:
             for v in self.x_prob_.variables():
                 [p for p in prox_params if p.id == v.id][0].project_and_assign(v.value)
-            (self.x_prob_ + x_prox).solve(solver=solver, *args, **kwargs)
+            if self.objective.NAME == "minimize":
+                (self.x_prob_ + x_prox).solve(solver=solver, *args, **kwargs)
+            else:
+                (self.x_prob_ - x_prox).solve(solver=solver, *args, **kwargs)
             for v in self.y_prob_.variables():
                 [p for p in prox_params if p.id == v.id][0].project_and_assign(v.value)
-            (self.y_prob_ + y_prox).solve(solver=solver, *args, **kwargs)
+            if self.objective.NAME == "minimize":
+                (self.y_prob_ + y_prox).solve(solver=solver, *args, **kwargs)
+            else:
+                (self.y_prob_ - y_prox).solve(solver=solver, *args, **kwargs)
 
             gap = np.abs(self.x_prob.objective.value - self.y_prob.objective.value)
             print(
