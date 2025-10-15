@@ -4,6 +4,8 @@ import numpy as np
 import cvxpy as cp
 from cvxpy.constraints.constraint import Constraint
 from dbcp.fix import fix_prob
+from dbcp.transform import transform_with_slack
+from dbcp.error import InitiationError, SolveError
 
 
 class BiconvexProblem(cp.Problem):
@@ -46,18 +48,45 @@ class BiconvexProblem(cp.Problem):
                 p.project_and_assign(var.value)
         return self._y_prob
 
-    def _initialize(self, max_iter=10) -> None:
+    def _project(self, solver, proj_max_iter) -> None:
+        print("Initiation start...")
         for v in self.variables():
-            v.project_and_assign(np.random.standard_normal(v.shape))
+            if v.value is None:
+                v.project_and_assign(np.random.standard_normal(v.shape))
+        xproj_prob = transform_with_slack(self.x_prob)
+        yproj_prob = transform_with_slack(self.y_prob)
+        i = 0
+        while True:
+            for p in xproj_prob.parameters():
+                p.project_and_assign([v for v in self.fix_vars[1] if v.id == p.id][0].value)
+            xproj_prob.solve(solver=solver)
+            for p in yproj_prob.parameters():
+                p.project_and_assign([v for v in self.fix_vars[0] if v.id == p.id][0].value)
+            yproj_prob.solve(solver=solver)
+
+            if all([c.value() for c in self.constraints]):
+                print(f'Found feasible point in {i+1} iterations.')
+                break
+            else:
+                i += 1
+            if i == proj_max_iter:
+                raise InitiationError("Cannot find a feasible point. Try different initial values.")
 
     def solve(self,
               solver: str = cp.CLARABEL,
-              lbd: float = 0.5,
+              lbd: float = 0.1,
               max_iter: float = 100,
-              eps: float = 1e-6,
+              gap_tolerance: float = 1e-6,
               *args, **kwargs
               ) -> float | None:
         print(f"{' DBCP Summary ':=^{65}}")
+        if self.status is None:
+            self._project(solver, kwargs.get('proj_max_iter', 10))
+        else:
+            print("Warm start with previous solution.")
+
+        print("Block coordinate descent start...")
+        print("-" * 65)
         print(f"{'iter':<7} {'xcost':<20} {'ycost':<20} {'gap':<10}")
         print("-" * 65)
         prox_params = [cp.Parameter(v.shape, id=v.id, **v.attributes) for v in self.variables()]
@@ -70,33 +99,37 @@ class BiconvexProblem(cp.Problem):
             for v in self.y_prob.variables()
         ]))))
         i = 0
-        while True:
-            for v in self.x_prob_.variables():
-                [p for p in prox_params if p.id == v.id][0].project_and_assign(v.value)
-            if self.objective.NAME == "minimize":
-                (self.x_prob_ + x_prox).solve(solver=solver, *args, **kwargs)
-            else:
-                (self.x_prob_ - x_prox).solve(solver=solver, *args, **kwargs)
-            for v in self.y_prob_.variables():
-                [p for p in prox_params if p.id == v.id][0].project_and_assign(v.value)
-            if self.objective.NAME == "minimize":
-                (self.y_prob_ + y_prox).solve(solver=solver, *args, **kwargs)
-            else:
-                (self.y_prob_ - y_prox).solve(solver=solver, *args, **kwargs)
+        try:
+            while True:
+                for v in self.x_prob_.variables():
+                    [p for p in prox_params if p.id == v.id][0].project_and_assign(v.value)
+                if self.objective.NAME == "minimize":
+                    (self.x_prob_ + x_prox).solve(solver=solver, *args, **kwargs)
+                else:
+                    (self.x_prob_ - x_prox).solve(solver=solver, *args, **kwargs)
+                for v in self.y_prob_.variables():
+                    [p for p in prox_params if p.id == v.id][0].project_and_assign(v.value)
+                if self.objective.NAME == "minimize":
+                    (self.y_prob_ + y_prox).solve(solver=solver, *args, **kwargs)
+                else:
+                    (self.y_prob_ - y_prox).solve(solver=solver, *args, **kwargs)
 
-            gap = np.abs(self.x_prob.objective.value - self.y_prob.objective.value)
-            print(
-                f"{i:<7} {self.x_prob.objective.value:<20.9f} {self.y_prob.objective.value:<20.9f} {gap:<10.9f}")
-            if gap < eps:
-                self._status = "converge"
-                break
-            else:
-                i += 1
-            if i == max_iter:
-                self._status = "converge_inaccurate"
-                break
+                gap = np.abs(self.x_prob.objective.value - self.y_prob.objective.value)
+                print(
+                    f"{i:<7} {self.x_prob.objective.value:<20.9f} {self.y_prob.objective.value:<20.9f} {gap:<10.9f}")
+                if gap < gap_tolerance:
+                    self._status = "converge"
+                    break
+                else:
+                    i += 1
+                if i == max_iter:
+                    self._status = "converge_inaccurate"
+                    break
+        except cp.SolverError as e:
+            raise SolveError("Solver failed. Try with larger 'lbd' value.") from e
+
         print("-" * 65)
-        print(f"Terminated with status: {self.status}")
+        print(f"Terminated with status: {self.status}.")
         print("=" * 65)
         self._value = self.y_prob.objective.value
         return self.value
