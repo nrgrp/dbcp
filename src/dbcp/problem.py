@@ -56,7 +56,7 @@ class BiconvexProblem(cp.Problem):
               max_iter: float = 100,
               eps: float = 1e-6,
               *args, **kwargs
-              ) -> float:
+              ) -> float | None:
         print(f"{' DBCP Summary ':=^{65}}")
         print(f"{'iter':<7} {'xcost':<20} {'ycost':<20} {'gap':<10}")
         print("-" * 65)
