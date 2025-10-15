@@ -26,7 +26,7 @@ def fix_prob(
     if isinstance(prob, cp.Problem):
         return _fix_prob(prob, vars, params)
     else:
-        raise ValueError("Object must be a cvxpy Problem.")
+        raise TypeError("Object must be a cvxpy Problem.")
 
 
 def _fix_prob(
