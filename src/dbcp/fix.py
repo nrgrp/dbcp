@@ -19,7 +19,7 @@ def fix_prob(
         if v.value is not None:
             p.project_and_assign(v.value)
         else:
-            p.value = np.random.standard_normal(v.shape)
+            p.project_and_assign(np.random.standard_normal(v.shape))
         p.id = v.id
         params.append(p)
 
