@@ -11,16 +11,15 @@ from cvxpy.constraints.second_order import SOC
 def fix_prob(
         prob: cp.Problem,
         vars: Iterable[cp.Variable]
-    ) -> cp.Problem:
+) -> cp.Problem:
     all_vars = sorted(prob.variables(), key=lambda v: v.id)
     params = []
     for v in all_vars:
-        p = cp.Parameter(shape=v.shape, **v.attributes)
+        p = cp.Parameter(shape=v.shape, id=v.id, **v.attributes)
         if v.value is not None:
             p.project_and_assign(v.value)
         else:
             p.project_and_assign(np.random.standard_normal(v.shape))
-        p.id = v.id
         params.append(p)
 
     params.sort(key=lambda p: p.id)
@@ -34,7 +33,7 @@ def _fix_prob(
         prob: cp.Problem,
         vars: Iterable[cp.Variable],
         params: list[cp.Parameter]
-    ) -> cp.Problem:
+) -> cp.Problem:
     fixed_fn = _fix_expr(prob.objective.expr, vars, params)
     fixed_obj = (
         cp.Minimize(fixed_fn)
@@ -73,7 +72,7 @@ def _fix_expr(
         expr: cp.Expression,
         vars: Iterable[cp.Variable],
         params: list[cp.Parameter]
-    ) -> cp.Parameter | cp.Expression:
+) -> cp.Parameter | cp.Expression:
     vars_id = sorted([v.id for v in vars])
     if isinstance(expr, cp.Variable) and expr.id in vars_id:
         param = [p for p in params if p.id == expr.id][0]
