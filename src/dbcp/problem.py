@@ -73,7 +73,7 @@ class BiconvexProblem(cp.Problem):
                 raise InitiationError("Cannot find a feasible point. Try different initial values.")
 
     def solve(self,
-              solver: str = cp.CLARABEL,
+              solver: str = cp.SCS,
               lbd: float = 0.1,
               max_iter: float = 100,
               gap_tolerance: float = 1e-6,
@@ -85,7 +85,7 @@ class BiconvexProblem(cp.Problem):
         else:
             print("Warm start with previous solution.")
 
-        print("Block coordinate descent start...")
+        print(f"Block coordinate descent start with solver {solver}...")
         print("-" * 65)
         print(f"{'iter':<7} {'xcost':<20} {'ycost':<20} {'gap':<10}")
         print("-" * 65)
@@ -98,22 +98,25 @@ class BiconvexProblem(cp.Problem):
             cp.sum_squares([p for p in prox_params if p.id == v.id][0] - v)
             for v in self.y_prob.variables()
         ]))))
+        if self.objective.NAME == "minimize":
+            xprox_prob = self.x_prob + x_prox
+            yprox_prob = self.y_prob + y_prox
+        else:
+            xprox_prob = self.x_prob - x_prox
+            yprox_prob = self.y_prob - y_prox
         i = 0
         try:
             while True:
                 for v in self.x_prob_.variables():
                     [p for p in prox_params if p.id == v.id][0].project_and_assign(v.value)
-                if self.objective.NAME == "minimize":
-                    (self.x_prob_ + x_prox).solve(solver=solver, *args, **kwargs)
-                else:
-                    (self.x_prob_ - x_prox).solve(solver=solver, *args, **kwargs)
+                xprox_prob.solve(solver=solver, *args, **kwargs)
                 for v in self.y_prob_.variables():
                     [p for p in prox_params if p.id == v.id][0].project_and_assign(v.value)
-                if self.objective.NAME == "minimize":
-                    (self.y_prob_ + y_prox).solve(solver=solver, *args, **kwargs)
-                else:
-                    (self.y_prob_ - y_prox).solve(solver=solver, *args, **kwargs)
-
+                yprox_prob.solve(solver=solver, *args, **kwargs)
+                
+                if ((xprox_prob.status not in (cp.OPTIMAL, cp.OPTIMAL_INACCURATE)) or 
+                    (yprox_prob.status not in (cp.OPTIMAL, cp.OPTIMAL_INACCURATE))):
+                    raise SolveError(f"Solver {solver} failed. Try a different solver.")
                 gap = np.abs(self.x_prob.objective.value - self.y_prob.objective.value)
                 print(
                     f"{i:<7} {self.x_prob.objective.value:<20.9f} {self.y_prob.objective.value:<20.9f} {gap:<10.9f}")
