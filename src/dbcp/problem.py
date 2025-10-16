@@ -50,6 +50,8 @@ class BiconvexProblem(cp.Problem):
 
     def _project(self, solver, proj_max_iter) -> None:
         print("Initiation start...")
+        print("-" * 65)
+        print(f"{'iter':<7} {'residual':<20}")
         for v in self.variables():
             if v.value is None:
                 v.project_and_assign(np.random.standard_normal(v.shape))
@@ -64,7 +66,10 @@ class BiconvexProblem(cp.Problem):
                 p.project_and_assign([v for v in self.fix_vars[0] if v.id == p.id][0].value)
             yproj_prob.solve(solver=solver)
 
+            print(
+                f"{i:<7} {yproj_prob.value:<20.9f}")
             if all([c.value() for c in self.constraints]):
+                print("-" * 65)
                 print(f'Found feasible point in {i+1} iterations.')
                 break
             else:
