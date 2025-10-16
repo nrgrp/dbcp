@@ -44,9 +44,10 @@ class BiconvexProblem(cp.Problem):
     @property
     def y_prob_(self) -> cp.Problem:
         for p in self._y_prob.parameters():
-            var = [v for v in self.fix_vars[0] if v.id == p.id][0]
-            if var.value is not None:
-                p.project_and_assign(var.value)
+            if p.id in [v.id for v in self.fix_vars[0]]:
+                var = [v for v in self.fix_vars[0] if v.id == p.id][0]
+                if var.value is not None:
+                    p.project_and_assign(var.value)
         return self._y_prob
 
     def _project(self, solver, proj_max_iter) -> None:
