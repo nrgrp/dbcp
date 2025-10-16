@@ -35,9 +35,10 @@ class BiconvexProblem(cp.Problem):
     @property
     def x_prob_(self) -> cp.Problem:
         for p in self._x_prob.parameters():
-            var = [v for v in self.fix_vars[1] if v.id == p.id][0]
-            if var.value is not None:
-                p.project_and_assign(var.value)
+            if p.id in [v.id for v in self.fix_vars[1]]:
+                var = [v for v in self.fix_vars[1] if v.id == p.id][0]
+                if var.value is not None:
+                    p.project_and_assign(var.value)
         return self._x_prob
 
     @property
