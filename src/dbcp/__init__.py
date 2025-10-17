@@ -1,6 +1,6 @@
-from .problem import BiconvexProblem
+from .problem import BiconvexProblem, BiconvexRelaxProblem
 
-__all__ = ["BiconvexProblem", "__version__"]
+__all__ = ["BiconvexProblem", "BiconvexRelaxProblem", "__version__"]
 
 try:
     from importlib.metadata import version, PackageNotFoundError

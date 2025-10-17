@@ -6,40 +6,41 @@ from cvxpy.constraints.psd import PSD
 from cvxpy.constraints.second_order import SOC
 
 
-def transform_with_slack(
-        prob: cp.Problem
-) -> cp.Problem:
-    proj_obj = 0
+def relax_with_slack(
+        prob: cp.Problem,
+        nu: cp.Parameter = None,
+) -> (cp.Problem, list[cp.Variable]):
     proj_constr = []
+    slack_vars = []
     for c in prob.constraints:
         if isinstance(c, Inequality):
-            s = cp.Variable(shape=c.shape, nonneg=True)
-            proj_obj += cp.sum(s)
-            proj_constr.append(c.args[0] <= c.args[1] + s)
+            slack_vars.append(cp.Variable(shape=c.shape, nonneg=True))
+            proj_constr.append(c.args[0] <= c.args[1] + slack_vars[-1])
         elif isinstance(c, Equality):
-            s = cp.Variable(shape=c.shape)
-            proj_obj += cp.norm1(s)
-            proj_constr.append(c.args[0] == c.args[1] + s)
+            slack_vars.append(cp.Variable(shape=c.shape))
+            proj_constr.append(c.args[0] == c.args[1] + slack_vars[-1])
         elif isinstance(c, Zero):
-            s = cp.Variable(shape=c.shape)
-            proj_obj += cp.norm1(s)
-            proj_constr.append(Zero(c.expr + s))
+            slack_vars.append(cp.Variable(shape=c.shape))
+            proj_constr.append(Zero(c.expr + slack_vars[-1]))
         elif isinstance(c, NonPos):
-            s = cp.Variable(shape=c.shape, nonneg=True)
-            proj_obj += cp.sum(s)
-            proj_constr.append(NonNeg(-c.expr + s))
+            slack_vars.append(cp.Variable(shape=c.shape, nonneg=True))
+            proj_constr.append(NonNeg(-c.expr + slack_vars[-1]))
         elif isinstance(c, NonNeg):
-            s = cp.Variable(shape=c.shape, nonneg=True)
-            proj_obj += cp.sum(s)
-            proj_constr.append(NonNeg(c.expr + s))
+            slack_vars.append(cp.Variable(shape=c.shape, nonneg=True))
+            proj_constr.append(NonNeg(c.expr + slack_vars[-1]))
         elif isinstance(c, PSD):
-            s = cp.Variable((), nonneg=True)
-            proj_obj += cp.sum(s)
-            proj_constr.append(PSD(c.expr + s * np.eye(c.shape[0])))
+            slack_vars.append(cp.Variable((), nonneg=True))
+            proj_constr.append(PSD(c.expr + slack_vars[-1] * np.eye(c.shape[0])))
         elif isinstance(c, SOC):
-            s = cp.Variable(shape=c.shape, nonneg=True)
-            proj_obj += cp.sum(s)
-            proj_constr.append(cp.SOC(c.args[0] + s, c.args[1], axis=c.axis))
+            slack_vars.append(cp.Variable(shape=c.shape, nonneg=True))
+            proj_constr.append(cp.SOC(c.args[0] + slack_vars[-1], c.args[1], axis=c.axis))
         else:
             raise TypeError(f"Constraint type {type(c)} not supported.")
-    return cp.Problem(cp.Minimize(proj_obj), proj_constr)
+    if nu is not None:
+        if prob.objective.NAME == 'minimize':
+            proj_obj = prob.objective + cp.Minimize(nu * cp.sum([cp.norm1(s) for s in slack_vars]))
+        else:
+            proj_obj = prob.objective - cp.Minimize(nu * cp.sum([cp.norm1(s) for s in slack_vars]))
+    else:
+        proj_obj = cp.Minimize(cp.sum([cp.norm1(s) for s in slack_vars]))
+    return cp.Problem(proj_obj, proj_constr), slack_vars
