@@ -62,8 +62,9 @@ class BiconvexProblem(cp.Problem):
             print("-" * 65)
             print(f"{'iter':<7} {'residual':<20}")
             print("-" * 65)
-            xproj_prob = transform_with_slack(self.x_prob)
-            yproj_prob = transform_with_slack(self.y_prob)
+            proj_prob = transform_with_slack(self)
+            xproj_prob = fix_prob(proj_prob, self.fix_vars[1])
+            yproj_prob = fix_prob(proj_prob, self.fix_vars[0])
             i = 0
             while True:
                 for p in xproj_prob.parameters():

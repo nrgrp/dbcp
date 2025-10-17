@@ -33,7 +33,7 @@ def transform_with_slack(
             proj_obj += cp.sum(s)
             proj_constr.append(NonNeg(c.expr + s))
         elif isinstance(c, PSD):
-            s = cp.Variable(1, nonneg=True)
+            s = cp.Variable((), nonneg=True)
             proj_obj += cp.sum(s)
             proj_constr.append(PSD(c.expr + s * np.eye(c.shape[0])))
         elif isinstance(c, SOC):
