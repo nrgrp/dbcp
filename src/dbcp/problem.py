@@ -133,7 +133,7 @@ class BiconvexProblem(cp.Problem):
                     raise SolveError(f"Solver {solver} failed. Try a different solver.")
                 gap = np.abs(self.x_prob.objective.value - self.y_prob.objective.value)
                 print(
-                    f"{i:<7} {self.x_prob.objective.value:<20.9f} {self.y_prob.objective.value:<20.9f} {gap:<10.9f}")
+                    f"{i:<7} {self.x_prob.objective.value:<20.9f} {self.y_prob.objective.value:<20.9f} {gap:<10.4e}")
                 if gap < gap_tolerance:
                     self._status = "converge"
                     break
