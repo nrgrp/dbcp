@@ -67,6 +67,8 @@ def _(BiconvexRelaxProblem, K, cp, m, n, xs, ys):
     constr = [
         thetas[0][0] <= 0,
         thetas[1][0] >= 0,
+        thetas[2][0] >= 0,
+        thetas[1][1] >= thetas[2][1],
         z >= 0, z <= 1, cp.sum(z, axis=1) == 1
     ]
 
@@ -94,7 +96,7 @@ def _(K, coefs, labels, m, np, plt, thetas, z):
     axs[0].set_yticks([0, 1])
     axs[0].set_yticklabels([1, 2])
 
-    axs[1].set_xlabel(r'$\bar{x}$')
+    axs[1].set_xlabel(r'$x$')
     axs[1].set_ylabel(r'$1/(1 + \exp(-x^T \theta))$', fontsize=15)
 
     plt.tight_layout()
