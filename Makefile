@@ -15,9 +15,9 @@ install: venv ## install all dependencies using uv
 	@printf "$(BLUE)Installing dependencies...$(RESET)\n"
 	@uv sync --frozen
 
-.PHONY: jupyter
-jupyter: install ## start a jupyter server
-	@uv run --with jupyter jupyter lab
+marimo: install ## start a Marimo server
+	@printf "$(BLUE)Start Marimo server...$(RESET)\n"
+	@uv run --with marimo marimo edit examples
 
 .PHONY: clean
 clean: ## clean generated files and directories
