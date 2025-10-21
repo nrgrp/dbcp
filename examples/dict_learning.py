@@ -12,6 +12,9 @@ def _(mo):
 
 @app.cell
 def _():
+    import warnings
+    warnings.filterwarnings("ignore")
+
     import marimo as mo
     import numpy as np
     import cvxpy as cp
