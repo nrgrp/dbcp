@@ -94,10 +94,7 @@ class BiconvexProblem(cp.Problem):
               *args, **kwargs
               ) -> float | None:
         print(f"{' DBCP Summary ':=^{85}}")
-        if self.status is None:
-            self._project(solver, kwargs.get('proj_max_iter', 10))
-        else:
-            print("Warm start with previous solution.")
+        self._project(solver, kwargs.get('proj_max_iter', 10))
 
         print(f"Block coordinate descent start with solver {solver}...")
         print("-" * 65)
