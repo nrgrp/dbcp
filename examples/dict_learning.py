@@ -12,13 +12,10 @@ def _(mo):
 
 @app.cell
 def _():
-    import warnings
-    warnings.filterwarnings("ignore")
-
     import marimo as mo
     import numpy as np
     import cvxpy as cp
-    from dbcp import BiconvexRelaxProblem
+    from dbcp import BiconvexProblem
 
     import matplotlib as mpl
     import matplotlib.pyplot as plt
@@ -29,11 +26,11 @@ def _():
     mpl.rcParams['font.family'] = ['sans-serif']
 
     np.random.seed(10015)
-    return BiconvexRelaxProblem, cp, mo, np, plt
+    return BiconvexProblem, cp, mo, np, plt
 
 
 @app.cell
-def _(BiconvexRelaxProblem, cp, np):
+def _(BiconvexProblem, cp, np):
     m = 10
     n = 20
     k = 20
@@ -43,16 +40,15 @@ def _(BiconvexRelaxProblem, cp, np):
     Y = cp.Variable((k, n))
     alpha = cp.Parameter(nonneg=True)
     obj = cp.Minimize(cp.sum_squares(D @ Y - X) / 2 + alpha * cp.norm1(Y))
-    prob = BiconvexRelaxProblem(obj, [[D], [Y]], [cp.norm(D,'fro')<=1])
+    prob = BiconvexProblem(obj, [[D], [Y]], [cp.norm(D,'fro') <= 1])
 
     errs = []
     cards = []
     for _a in np.logspace(-5, 0, 50):
+        alpha.value = _a
         D.value = None
         Y.value = None
-        alpha.value = _a
-        prob.solve(cp.CLARABEL, gap_tolerance=1e-1, nu=1e2)
-        assert 'infeasible' not in prob.status
+        prob.solve(cp.CLARABEL, gap_tolerance=1e-1)
         errs.append(cp.norm(D @ Y - X, 'fro').value / cp.norm(X, 'fro').value)
         cards.append(cp.sum(cp.abs(Y).value >= 1e-3).value)
     return cards, errs
