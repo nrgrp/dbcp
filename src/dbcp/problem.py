@@ -121,16 +121,18 @@ class BiconvexProblem(cp.Problem):
                 for v in self.x_prob_.variables():
                     [p for p in prox_params if p.id == v.id][0].project_and_assign(v.value)
                 xprox_prob.solve(solver=solver, *args, **kwargs)
+                xvalue = self.x_prob.objective.value
                 for v in self.y_prob_.variables():
                     [p for p in prox_params if p.id == v.id][0].project_and_assign(v.value)
                 yprox_prob.solve(solver=solver, *args, **kwargs)
+                yvalue = self.y_prob.objective.value
 
                 if ((xprox_prob.status not in (cp.OPTIMAL, cp.OPTIMAL_INACCURATE)) or
                         (yprox_prob.status not in (cp.OPTIMAL, cp.OPTIMAL_INACCURATE))):
                     raise SolveError(f"Solver {solver} failed. Try a different solver.")
-                gap = np.abs(self.x_prob.objective.value - self.y_prob.objective.value)
+                gap = np.abs(xvalue - yvalue)
                 print(
-                    f"{i:<7} {self.x_prob.objective.value:<20.9f} {self.y_prob.objective.value:<20.9f} {gap:<10.4e}")
+                    f"{i:<7} {xvalue:<20.9f} {yvalue:<20.9f} {gap:<10.4e}")
                 if gap < gap_tolerance:
                     self._status = "converge"
                     break
@@ -251,20 +253,22 @@ class BiconvexRelaxProblem(cp.Problem):
                     if v.id not in slack_ids:
                         [p for p in prox_params if p.id == v.id][0].project_and_assign(v.value)
                 xprox_prob.solve(solver=solver, *args, **kwargs)
+                xvalue = self.x_prob.objective.value
                 for v in self.y_prob_.variables():
                     if v.id not in slack_ids:
                         [p for p in prox_params if p.id == v.id][0].project_and_assign(v.value)
                 yprox_prob.solve(solver=solver, *args, **kwargs)
+                yvalue = self.y_prob.objective.value
 
                 if ((xprox_prob.status not in (cp.OPTIMAL, cp.OPTIMAL_INACCURATE)) or
                         (yprox_prob.status not in (cp.OPTIMAL, cp.OPTIMAL_INACCURATE))):
                     raise SolveError(f"Solver {solver} failed. Try a different solver.")
-                gap = np.abs(self.x_prob.objective.value - self.y_prob.objective.value)
+                gap = np.abs(xvalue - yvalue)
                 total_slack = np.sum([np.sum(np.abs(s.value)) for s in self.slack_vars])
                 print(
                     f"{i:<7} "
-                    f"{self.x_prob.objective.value:<20.9f} "
-                    f"{self.y_prob.objective.value:<20.9f} "
+                    f"{xvalue:<20.9f} "
+                    f"{yvalue:<20.9f} "
                     f"{gap:<20.4e} "
                     f"{total_slack:<20.4e} "
                 )
