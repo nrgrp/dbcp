@@ -4,6 +4,12 @@ __generated_with = "0.17.0"
 app = marimo.App(width="medium")
 
 
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""# Blind Deconvolution""")
+    return
+
+
 @app.cell
 def _():
     import warnings
@@ -23,7 +29,7 @@ def _():
     mpl.rcParams['font.family'] = ['sans-serif']
 
     np.random.seed(10015)
-    return BiconvexProblem, cp, np, plt
+    return BiconvexProblem, cp, mo, np, plt
 
 
 @app.cell
