@@ -6,7 +6,7 @@ import cvxpy as cp
 from cvxpy.constraints.constraint import Constraint
 from dbcp.fix import fix_prob
 from dbcp.transform import relax_with_slack
-from dbcp.error import InitiationError, SolveError
+from dbcp.error import InitiationError, SolveError, DBCPError
 
 
 class BiconvexProblem(cp.Problem):
@@ -93,6 +93,9 @@ class BiconvexProblem(cp.Problem):
               gap_tolerance: float = 1e-6,
               *args, **kwargs
               ) -> float | None:
+        if not self.is_dbcp():
+            raise DBCPError("Problem does not follow DBCP rules.")
+
         print(f"{' DBCP Summary ':=^{85}}")
         self._project(solver, kwargs.get('proj_max_iter', 10))
 
@@ -221,6 +224,9 @@ class BiconvexRelaxProblem(cp.Problem):
               slack_tolerance: float = 1e-6,
               *args, **kwargs
               ) -> float | None:
+        if not self.is_dbcp():
+            raise DBCPError("Problem does not follow DBCP rules.")
+
         print(f"{' DBCP Summary ':=^{85}}")
         print(f"Block coordinate descent start with solver {solver}...")
         print("-" * 85)

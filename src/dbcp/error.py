@@ -3,3 +3,6 @@ class InitiationError(Exception):
 
 class SolveError(Exception):
     """Exception raised for errors during solving process."""
+
+class DBCPError(Exception):
+    """Exception raised when trying to solve a non-DBCP problem."""
