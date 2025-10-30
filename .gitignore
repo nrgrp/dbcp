@@ -192,3 +192,5 @@ cython_debug/
 
 # Marimo
 __marimo__/
+
+figures/

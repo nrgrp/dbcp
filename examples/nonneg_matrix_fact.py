@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.17.0"
+__generated_with = "0.17.3"
 app = marimo.App(width="medium")
 
 
@@ -26,17 +26,15 @@ def _():
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
+    mo.md(r"""
     ## Introduction
 
     Suppose we are given a matrix $A \in \mathbf{R}^{m \times n}$, and are interested in solving the problem:
-    $$\begin{array}{ll}\text{minimize} & {\|XY - A\|}_F \\ \text{subject to} & X_{ij} \geq 0,\quad i = 1, \ldots, m,\quad j = 1, \ldots, k \\ & Y_{ij} \geq 0,\quad i = 1, \ldots, k,\quad j = 1, \ldots, n,\end{array}$$
+    $$\begin{array}{ll}\text{minimize} & {\|XY - A\|}_F^2 \\ \text{subject to} & X_{ij} \geq 0,\quad i = 1, \ldots, m,\quad j = 1, \ldots, k \\ & Y_{ij} \geq 0,\quad i = 1, \ldots, k,\quad j = 1, \ldots, n,\end{array}$$
     where $X \in \mathbf{R}^{m \times k}$ and $Y \in \mathbf{R}^{k \times n}$ are the problem variables.
 
     This problem is biconvex in the variables $X$ and $Y$.
-    """
-    )
+    """)
     return
 
 
@@ -66,8 +64,8 @@ def _(A, BiconvexProblem, cp, k, m, n):
     X = cp.Variable((m, k), nonneg=True)
     Y = cp.Variable((k, n), nonneg=True)
 
-    obj = cp.Minimize(cp.norm(X @ Y - A, 'fro'))
-    prob = BiconvexProblem(obj, ([X], [Y]))
+    obj = cp.Minimize(cp.sum_squares(X @ Y - A))
+    prob = BiconvexProblem(obj, [[X], [Y]])
     prob.solve()
     return
 

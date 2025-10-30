@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.17.0"
+__generated_with = "0.17.3"
 app = marimo.App(width="medium")
 
 
@@ -12,6 +12,7 @@ def _(mo):
 
 @app.cell
 def _():
+    import os
     import warnings
     warnings.filterwarnings("ignore")
 
@@ -28,6 +29,9 @@ def _():
     mpl.rcParams["mathtext.fontset"] = 'cm'
     mpl.rcParams['font.family'] = ['sans-serif']
 
+    if not os.path.exists('./figures'):
+        os.makedirs('./figures')
+
     np.random.seed(10015)
     return BiconvexProblem, cp, mo, np, plt
 
@@ -42,10 +46,14 @@ def _(BiconvexProblem, conv, cp, np):
     y0 = np.exp(-np.square(np.linspace(-2, 2, m)) * 2)
     d = np.convolve(x0, y0)
 
-    y = cp.Variable(m, nonneg=True)
+    alpha_sp = 0.1
+    alpha_sm = 0.2
+    beta = 1
+
     x = cp.Variable(n, nonneg=True)
-    obj = cp.sum_squares(conv(x, y) - d) + 0.1 * cp.norm1(x) + 0.2 * cp.sum_squares(cp.diff(y))
-    constr = [cp.norm(y, "inf") <= 1]
+    y = cp.Variable(m, nonneg=True)
+    obj = cp.sum_squares(conv(x, y) - d) + alpha_sp * cp.norm1(x) + alpha_sm * cp.sum_squares(cp.diff(y))
+    constr = [cp.norm(y, "inf") <= beta]
     prob = BiconvexProblem(cp.Minimize(obj), [[x], [y]], constr)
     prob.solve(cp.CLARABEL, gap_tolerance=1e-5, max_iter=200)
     return d, x, x0, y, y0
@@ -62,16 +70,18 @@ def _(d, np, plt, x, x0, y, y0):
     axs.plot(np.convolve(x.value, y.value), marker='D', color='C4', zorder=-1)
 
     axs.legend([
-        "ground truth $x_0$",
-        "ground truth $y_0$",
+        "ground truth $x$",
+        "ground truth $y$",
         "ground truth $d$",
-        "recovered $x_0$",
-        "recovered $y_0$",
+        "recovered $x$",
+        "recovered $y$",
         "recovered $d$"
     ], frameon=False, fontsize=12)
     axs.set_xlim(0, 60)
     axs.set_xlabel("indices")
+
     plt.show()
+    fig.savefig('./figures/blind_deconv.pdf', bbox_inches='tight')
     return
 
 

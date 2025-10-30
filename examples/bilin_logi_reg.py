@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.17.0"
+__generated_with = "0.17.3"
 app = marimo.App(width="medium")
 
 
@@ -40,27 +40,28 @@ def _(make_classification):
     k = 10
     r = 5
     ninfo_frac = 0.9
-    X, y = make_classification(
+    Xs, ys = make_classification(
         n_samples=m,
         n_features=n * k,
         n_informative=int(n * k * ninfo_frac),
         n_redundant=int(n * k * (1 - ninfo_frac))
     )
-    X = X.reshape(m, n, k)
-    return X, k, n, r, y
+    Xs = Xs.reshape(m, n, k)
+    return Xs, k, n, r, ys
 
 
 @app.cell
-def _(BiconvexProblem, X, cp, k, n, r, y):
+def _(BiconvexProblem, Xs, cp, k, n, r, ys):
     U = cp.Variable((n, r))
     V = cp.Variable((k, r))
 
     obj = 0
-    for _x, _y in zip(X, y):
+    for _X, _y in zip(Xs, ys):
         obj += cp.sum(
-        cp.multiply(_y, cp.trace(U.T @ _x @ V)) - cp.logistic(cp.trace(U.T @ _x @ V))
-    )
-    prob = BiconvexProblem(cp.Maximize(obj), [[U], [V]], [])
+            cp.multiply(_y, cp.trace(U.T @ _X @ V)) 
+                - cp.logistic(cp.trace(U.T @ _X @ V))
+        )
+    prob = BiconvexProblem(cp.Maximize(obj), [[U], [V]])
     prob.solve(cp.CLARABEL, lbd=1, gap_tolerance=1e-4)
     return
 
