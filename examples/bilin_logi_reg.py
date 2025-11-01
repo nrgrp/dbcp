@@ -1,12 +1,14 @@
 import marimo
 
-__generated_with = "0.17.3"
+__generated_with = "0.17.6"
 app = marimo.App(width="medium")
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""# Bilinear Logistic Regression""")
+    mo.md(r"""
+    # Bilinear Logistic Regression
+    """)
     return
 
 
@@ -58,7 +60,7 @@ def _(BiconvexProblem, Xs, cp, k, n, r, ys):
     obj = 0
     for _X, _y in zip(Xs, ys):
         obj += cp.sum(
-            cp.multiply(_y, cp.trace(U.T @ _X @ V)) 
+            cp.multiply(_y, cp.trace(U.T @ _X @ V))
                 - cp.logistic(cp.trace(U.T @ _X @ V))
         )
     prob = BiconvexProblem(cp.Maximize(obj), [[U], [V]])

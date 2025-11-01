@@ -52,7 +52,7 @@ def test_blin_logi_reg():
     obj = 0
     for _X, _y in zip(Xs, ys):
         obj += cp.sum(
-            cp.multiply(_y, cp.trace(U.T @ _X @ V)) 
+            cp.multiply(_y, cp.trace(U.T @ _X @ V))
                 - cp.logistic(cp.trace(U.T @ _X @ V))
         )
     prob = BiconvexProblem(cp.Maximize(obj), [[U], [V]])
