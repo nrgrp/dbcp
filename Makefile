@@ -22,6 +22,13 @@ marimo: install ## start a Marimo server
 	@printf "$(BLUE)Start Marimo server...$(RESET)\n"
 	@uv run --with marimo marimo edit examples
 
+.PHONY: fmt
+fmt: venv ## Run code formatting and linting
+	@printf "$(BLUE)Running formatters and linters...$(RESET)\n"
+	@uv pip install pre-commit
+	@uv run pre-commit install
+	@uv run pre-commit run --all-files
+
 .PHONY: clean
 clean: ## clean generated files and directories
 	@printf "$(BLUE)Cleaning project...$(RESET)\n"
