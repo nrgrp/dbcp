@@ -19,7 +19,7 @@ jobs:
 
       - uses: cvxgrp/.github/actions/deptry@v2.2.8
         with:
-          source-folder: 'src/rlfit'
+          source-folder: 'src/dbcp'
 
   # Runs pre-commit hooks on all files in the repository
   # Checks code formatting, linting, and other quality checks
