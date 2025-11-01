@@ -34,3 +34,8 @@ exclude = [
 
 [tool.ruff.lint]
 select = ["E", "F", "I"]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.4.2",
+]
