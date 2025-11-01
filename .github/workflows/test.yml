@@ -28,4 +28,4 @@ jobs:
 
       - uses: cvxgrp/.github/actions/test@main
         with:
-          tests-folder: 'src/tests'
+          tests-folder: 'tests'
