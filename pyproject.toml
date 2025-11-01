@@ -1,7 +1,7 @@
 [project]
 name = "dbcp"
 version = "0.0.0"
-description = "A Python package for disciplined biconvex programming."
+description = "A CVXPY extension for disciplined biconvex programming."
 authors = [
     {name = "Hao Zhu", email = "zhuh@cs.uni-freiburg.de"},
     {name = "Joschka Boedecker"}
