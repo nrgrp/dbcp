@@ -10,12 +10,48 @@ from dbcp.error import InitiationError, SolveError, DBCPError
 
 
 class BiconvexProblem(cp.Problem):
+    """A biconvex optimization problem class.
+
+    Attributes
+    ----------
+    fix_vars : tuple[Iterable[cp.Variable], Iterable[cp.Variable]]
+        A tuple of two iterables of cvxpy Variables. The first iterable
+        contains the variables to be optimized in the x-problem, and
+        the second iterable contains the variables to be optimized in the y-problem.
+    x_prob : cvxpy.Problem
+        The x-problem with y-variables fixed.
+    y_prob : cvxpy.Problem
+        The y-problem with x-variables fixed.
+    status : str | None
+        The status of the last solve.
+    value : float | None
+        The objective value of the last solve.
+
+    Methods
+    -------
+    solve(solver: str = cp.SCS, lbd: float = 0.1, max_iter: int = 100,
+          gap_tolerance: float = 1e-6, *args, **kwargs) -> float | None
+        Solve the biconvex problem using alternate convex search.
+    is_dbcp() -> bool
+        Check if the problem follows DBCP rules.
+    """
     def __init__(
             self,
             biconvex_objective,
             fix_vars: tuple[Iterable[cp.Variable], Iterable[cp.Variable]],
             constraints: list[Constraint] | None = None,
     ) -> None:
+        """Initialize a BiconvexProblem instance.
+
+        Parameters
+        ----------
+        biconvex_objective : cp.Objective
+            The biconvex objective function.
+        fix_vars : tuple[Iterable[cp.Variable], Iterable[cp.Variable]]
+            A tuple of two iterables of cvxpy Variables. The first iterable contains
+            the variables to be optimized in the x-problem, and
+            the second iterable contains the variables to be optimized in the y-problem.
+        """
         super().__init__(biconvex_objective, constraints)
         self.fix_vars = fix_vars
 
@@ -27,14 +63,18 @@ class BiconvexProblem(cp.Problem):
 
     @property
     def x_prob(self) -> cp.Problem:
+        """The x-problem with y-variables fixed."""
         return self._x_prob
 
     @property
     def y_prob(self) -> cp.Problem:
+        """The y-problem with x-variables fixed."""
         return self._y_prob
 
     @property
     def x_prob_(self) -> cp.Problem:
+        """The x-problem with y-variables fixed.
+        Calling this property also updates the fixed variables to current values."""
         for p in self._x_prob.parameters():
             if p.id in [v.id for v in self.fix_vars[1]]:
                 var = [v for v in self.fix_vars[1] if v.id == p.id][0]
@@ -44,6 +84,8 @@ class BiconvexProblem(cp.Problem):
 
     @property
     def y_prob_(self) -> cp.Problem:
+        """The y-problem with x-variables fixed.
+        Calling this property also updates the fixed variables to current values."""
         for p in self._y_prob.parameters():
             if p.id in [v.id for v in self.fix_vars[0]]:
                 var = [v for v in self.fix_vars[0] if v.id == p.id][0]
@@ -89,17 +131,31 @@ class BiconvexProblem(cp.Problem):
     def solve(self,
               solver: str = cp.SCS,
               lbd: float = 0.1,
-              max_iter: float = 100,
+              max_iter: int = 100,
               gap_tolerance: float = 1e-6,
               *args, **kwargs
               ) -> float | None:
+        """Solve the biconvex problem using alternate convex search.
+
+        Parameters
+        ----------
+        solver : str
+            The cvxpy Solver to use for solving the convex subproblems.
+        lbd : float
+            The regularization parameter of the proximal term.
+        max_iter : int
+            The maximum number of ACS iterations.
+        gap_tolerance : float
+            The tolerance for the gap between x- and y-problems.
+        *args, **kwargs : Additional arguments for the solver.
+        """
         if not self.is_dbcp():
             raise DBCPError("Problem does not follow DBCP rules.")
 
         print(f"{' DBCP Summary ':=^{85}}")
         self._project(solver, kwargs.get('proj_max_iter', 10))
 
-        print(f"Block coordinate descent start with solver {solver}...")
+        print(f"Alternate convex search start with solver {solver}...")
         print("-" * 65)
         print(f"{'iter':<7} {'xcost':<20} {'ycost':<20} {'gap':<10}")
         print("-" * 65)
@@ -155,25 +211,67 @@ class BiconvexProblem(cp.Problem):
 
     @property
     def status(self) -> str | None:
+        """The status of the last solve."""
         return self._status
 
     @property
     def value(self) -> float | None:
+        """The objective value of the last solve."""
         return self._value
 
     def is_dbcp(self) -> bool:
+        """Check if the problem follows DBCP rules."""
         if self.x_prob.is_dcp() and self.y_prob.is_dcp():
             return True
         return False
 
 
 class BiconvexRelaxProblem(cp.Problem):
+    """A biconvex optimization problem class with relaxation.
+
+    Attributes
+    ----------
+    fix_vars : tuple[Iterable[cp.Variable], Iterable[cp.Variable]]
+        A tuple of two iterables of cvxpy Variables. The first iterable
+        contains the variables to be optimized in the x-problem, and
+        the second iterable contains the variables to be optimized in the y-problem.
+    rlx_prob : cvxpy.Problem
+        The relaxed problem with slack variables added to constraints.
+    x_prob : cvxpy.Problem
+        The relaxed x-problem with y-variables fixed.
+    y_prob : cvxpy.Problem
+        The relaxed y-problem with x-variables fixed.
+    status : str | None
+        The status of the last solve.
+    value : float | None
+        The objective value of the last solve.
+
+    Methods
+    -------
+    solve(solver: str = cp.SCS, lbd: float = 0.1, nu: float = 1,
+          max_iter: int = 100, gap_tolerance: float = 1e-6,
+          slack_tolerance: float = 1e-6, *args, **kwargs) -> float | None
+        Solve the biconvex problem using infeasible start alternate convex search.
+    is_dbcp() -> bool
+        Check if the problem follows DBCP rules.
+    """
     def __init__(
             self,
             biconvex_objective,
             fix_vars: tuple[Iterable[cp.Variable], Iterable[cp.Variable]],
             constraints: list[Constraint] | None = None,
     ) -> None:
+        """Initialize a BiconvexRelaxProblem instance.
+
+        Parameters
+        ----------
+        biconvex_objective : cp.Objective
+            The biconvex objective function.
+        fix_vars : tuple[Iterable[cp.Variable], Iterable[cp.Variable]]
+            A tuple of two iterables of cvxpy Variables. The first iterable contains
+            the variables to be optimized in the x-problem, and
+            the second iterable contains the variables to be optimized in the y-problem.
+        """
         super().__init__(biconvex_objective, constraints)
         self.fix_vars = fix_vars
 
@@ -187,18 +285,23 @@ class BiconvexRelaxProblem(cp.Problem):
 
     @property
     def x_prob(self) -> cp.Problem:
+        """The relaxed x-problem with y-variables fixed."""
         return self._x_prob
 
     @property
     def y_prob(self) -> cp.Problem:
+        """The relaxed y-problem with x-variables fixed."""
         return self._y_prob
 
     @property
     def rlx_prob(self) -> cp.Problem:
+        """The relaxed problem with slack variables added to constraints."""
         return self._rlx_prob
 
     @property
     def x_prob_(self) -> cp.Problem:
+        """The relaxed x-problem with y-variables fixed.
+        Calling this property also updates the fixed variables to current values."""
         for p in self._x_prob.parameters():
             if p.id in [v.id for v in self.fix_vars[1]]:
                 var = [v for v in self.fix_vars[1] if v.id == p.id][0]
@@ -208,6 +311,8 @@ class BiconvexRelaxProblem(cp.Problem):
 
     @property
     def y_prob_(self) -> cp.Problem:
+        """The relaxed y-problem with x-variables fixed.
+        Calling this property also updates the fixed variables to current values."""
         for p in self._y_prob.parameters():
             if p.id in [v.id for v in self.fix_vars[0]]:
                 var = [v for v in self.fix_vars[0] if v.id == p.id][0]
@@ -219,16 +324,35 @@ class BiconvexRelaxProblem(cp.Problem):
               solver: str = cp.SCS,
               lbd: float = 0.1,
               nu: float = 1,
-              max_iter: float = 100,
+              max_iter: int = 100,
               gap_tolerance: float = 1e-6,
               slack_tolerance: float = 1e-6,
               *args, **kwargs
               ) -> float | None:
+        """Solve the biconvex problem using infeasible start alternate convex search.
+
+        Parameters
+        ----------
+        solver : str
+            The cvxpy Solver to use for solving the convex subproblems.
+        lbd : float
+            The regularization parameter of the proximal term.
+        nu : float
+            The penalty parameter for the total slackness.
+        max_iter : int
+            The maximum number of ACS iterations.
+        gap_tolerance : float
+            The tolerance for the gap between x- and y-problems.
+        slack_tolerance : float
+            The tolerance for the total slackness.
+        *args, **kwargs
+            Additional arguments to pass to the solver.
+        """
         if not self.is_dbcp():
             raise DBCPError("Problem does not follow DBCP rules.")
 
         print(f"{' DBCP Summary ':=^{85}}")
-        print(f"Block coordinate descent start with solver {solver}...")
+        print(f"Alternate convex search start with solver {solver}...")
         print("-" * 85)
         print(f"{'iter':<7} {'xcost':<20} {'ycost':<20} {'gap':<20} {'total_slack':<20}")
         print("-" * 85)
@@ -307,13 +431,16 @@ class BiconvexRelaxProblem(cp.Problem):
 
     @property
     def status(self) -> str | None:
+        """The status of the last solve."""
         return self._status
 
     @property
     def value(self) -> float | None:
+        """The objective value of the last solve."""
         return self._value
 
     def is_dbcp(self) -> bool:
+        """Check if the problem follows DBCP rules."""
         if self.x_prob.is_dcp() and self.y_prob.is_dcp():
             return True
         return False
