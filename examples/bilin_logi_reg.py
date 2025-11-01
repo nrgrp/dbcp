@@ -35,6 +35,44 @@ def _():
     return BiconvexProblem, cp, make_classification, mo
 
 
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ## Introduction
+
+    Suppose we are given a dataset $(X_i, y_i)$, $i = 1, \ldots, m$, where each sample consists of a feature matrix $X_i \in \mathbf{R}^{n \times k}$ and a binary label $y_i \in \{0, 1\}$.
+    Our goal is to construct a bilinear classifier
+
+    \[
+        \hat{y} = \left\{\begin{array}{ll}
+            1 & \mathop{\bf tr}(U^T X V) > 0\\
+            0 & \text{otherwise},
+        \end{array}\right.
+    \]
+
+    where $U \in \mathbf{R}^{n \times r}$ and $V \in \mathbf{R}^{k \times r}$ are the bilinear logistic regression coefficients with a predefined (maximum) rank $r$, and $\mathop{\bf tr}(M)$ denotes the trace of some square matrix $M$.
+
+    To fit a bilinear logistic regression model to the dataset, we would like to solve the following bilinear maximum likelihood estimation problem:
+
+    \[
+        \begin{array}{ll}
+            \text{maximize} & \sum_{i = 1}^{m} y_i \mathop{\bf tr}(U^T X_i V) - \log(1 + \exp(\mathop{\bf tr}(U^T X_i V)))
+        \end{array}
+    \]
+
+    with variables $U$ and $V$.
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ## Generate problem data
+    """)
+    return
+
+
 @app.cell
 def _(make_classification):
     m = 300
@@ -50,6 +88,14 @@ def _(make_classification):
     )
     Xs = Xs.reshape(m, n, k)
     return Xs, k, n, r, ys
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ## Specify and solve the biconvex problem
+    """)
+    return
 
 
 @app.cell
