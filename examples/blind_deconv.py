@@ -38,8 +38,58 @@ def _():
     return BiconvexProblem, cp, mo, np, plt
 
 
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ## Introduction
+
+    Blind deconvolution is a technique used to recover some sharp signal or image from a blurred observation when the blur itself is unknown.
+    It jointly estimates both the original signal and the blur kernel, with some prior knowledge about their structures.
+
+    Suppose we are given a data vector $d \in \mathbf{R}^{m + n - 1}$, which is the convolution of an unknown sparse signal $x \in \mathbf{R}^n$ and an unknown smooth vector $y \in \mathbf{R}^m$ with bounded $\ell_\infty$-norm (i.e., bounded largest entry).
+    Additionally, we have the prior knowledge that both the vectors $x$ and $y$ are nonnegative.
+    The corresponding blind deconvolution problem can be formulated as the following biconvex optimization problem:
+
+    \[
+        \begin{array}{ll}
+            \text{minimize} & {\|x \otimes  y - d\|}_2^2 + \alpha_{\rm sp} {\|x\|}_1 + \alpha_{\rm sm} {\|Dy\|}_2^2\\
+            \text{subject to} & x \succeq 0,\quad y \succeq 0\\
+            & {\|y\|}_\infty \leq \beta
+        \end{array}
+    \]
+
+    with variables $x$ and $y$, where $\alpha_{\rm sp}, \alpha_{\rm sm} > 0$ are the regularization parameters for the sparsity of $x$ and smoothness of $y$, respectively, and $\beta > 0$ is the bound on the $\ell_\infty$-norm of the vector $y$.
+    The matrix $D \in \mathbf{R}^{(m - 1) \times m}$ is the first-order difference operator, given by,
+
+    \[
+        D = \left[\begin{array}{ccccc}
+            1 & -1 &&&\\
+            & 1 & -1 &&\\
+            && \ddots & \ddots &\\
+            &&& 1 & -1
+        \end{array}\right] \in \mathbf{R}^{(m - 1) \times m},
+    \]
+
+    so that $Dy$ computes the vector of successive differences of $y$.
+    The convolution $x \otimes y$ of the vectors $x$ and $y$ is given by
+
+    \[
+        {(x \otimes y)}_k = \sum_{i + j = k} x_i y_j,\quad k = 1, \ldots, m + n - 1.
+    \]
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ## Generate problem data
+    """)
+    return
+
+
 @app.cell
-def _(BiconvexProblem, conv, cp, np):
+def _(np):
     n = 120
     m = 40
 
@@ -47,7 +97,19 @@ def _(BiconvexProblem, conv, cp, np):
     x0[6] = 1
     y0 = np.exp(-np.square(np.linspace(-2, 2, m)) * 2)
     d = np.convolve(x0, y0)
+    return d, m, n, x0, y0
 
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ## Specify and solve the problem
+    """)
+    return
+
+
+@app.cell
+def _(BiconvexProblem, conv, cp, d, m, n):
     alpha_sp = 0.1
     alpha_sm = 0.2
     beta = 1
@@ -58,7 +120,15 @@ def _(BiconvexProblem, conv, cp, np):
     constr = [cp.norm(y, "inf") <= beta]
     prob = BiconvexProblem(cp.Minimize(obj), [[x], [y]], constr)
     prob.solve(cp.CLARABEL, gap_tolerance=1e-5, max_iter=200)
-    return d, x, x0, y, y0
+    return x, y
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ## Plot the results
+    """)
+    return
 
 
 @app.cell
