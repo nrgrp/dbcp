@@ -146,7 +146,7 @@ The most important optional arguments of the
 
 The `BiconvexRelaxProblem.solve` method has an additional
 optional argument `nu` to specify the penalty parameter
-for the total slackness, i.e.,
+for the total slack, i.e.,
 violation of the biconvex constraints.
 
 ### Problem status
@@ -170,10 +170,10 @@ is reached.
 The possible status values for `BiconvexRelaxProblem` are as follows:
 
 - `converge`: The ACS procedure converged successfully
-  with a feasible solution (i.e., the total slackness is zero)
+  with a feasible solution (i.e., the total slack is zero)
   to the original problem.
 - `converge_infeasible`: The ACS procedure converged successfully,
-  but the final solution is still infeasible with nonzero total slackness.
+  but the final solution is still infeasible with nonzero total slack.
 - `converge_inaccurate`: The maximum number of iterations was reached
   with a feasible final point,
   but the final gap between the subproblems is still
@@ -181,7 +181,7 @@ The possible status values for `BiconvexRelaxProblem` are as follows:
 - `converge_inaccurate_infeasible`: The maximum number of iterations was reached,
   but the final gap between the subproblems is still
   larger than the specified tolerance,
-  and the final solution is still infeasible with nonzero total slackness.
+  and the final solution is still infeasible with nonzero total slack.
 
 When 'infeasible' appears in the status,
 one may want to increase the penalty parameter `nu`
