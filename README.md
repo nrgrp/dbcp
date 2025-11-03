@@ -1,8 +1,7 @@
 # DBCP: Disciplined Biconvex Programming
 
 DBCP is an extension of [CVXPY](https://github.com/cvxpy/cvxpy)
-for *biconvex optimization problems*.
-A biconvex optimization problem has the form of
+for *biconvex optimization problems* in the form
 
 $$
 \begin{array}{ll}
@@ -22,6 +21,38 @@ can be found in our accompanying paper.
 
 ## Installation
 
+### Using pip
+
+You can install the package using pip:
+
+```shell
+pip install dbcp
+```
+
+### Development setup
+
+We manage dependencies through [uv](https://docs.astral.sh/uv).
+Once you have installed uv you can perform the following
+commands to set up a development environment:
+
+1. Clone the repository:
+
+    ```shell
+    git clone https://github.com/nrgrp/dbcp.git
+    cd dbcp
+    ```
+
+2. Create a virtual environment and install dependencies:
+
+    ```shell
+    make install
+    ```
+
+This will:
+
+- Create a Python 3.12 virtual environment.
+- Install all dependencies from pyproject.toml.
+
 ## Usage
 
 ### DBCP syntax rule for multiplications
@@ -33,6 +64,8 @@ can be found in our accompanying paper.
 ### Solving with infeasible starting points
 
 ### Verification of biconvexity
+
+### Problem status
 
 ## Basic example
 
