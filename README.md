@@ -1,7 +1,8 @@
 # DBCP: Disciplined Biconvex Programming
 
 DBCP is an extension of [CVXPY](https://github.com/cvxpy/cvxpy)
-for *biconvex optimization problems* in the form
+for (approximately) solving *biconvex optimization problems*
+in the form
 
 $$
 \begin{array}{ll}
