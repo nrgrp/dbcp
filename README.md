@@ -69,4 +69,39 @@ This will:
 
 ## Basic example
 
+Suppose we are given a matrix $A \in \mathbf{R}^{m \times n}$.
+Consider the following nonnegative matrix factorization problem:
+
+$$
+\begin{array}{ll}
+    \text{minimize} & {\|XY + Z - A\|}_F\\
+    \text{subject to} & X_{ij} \geq 0,\quad i = 1, \ldots, m,
+        \quad j = 1, \ldots, k\\
+    & Y_{ij} \geq 0,\quad i = 1, \ldots, k,\quad j = 1, \ldots, n\\
+    & {\|Z\|}_F \leq 1,
+\end{array}
+$$
+
+with variables $X \in \mathbf{R}^{m \times k}$,
+$Y \in \mathbf{R}^{k \times n}$,
+and $Z \in \mathbf{R}^{m \times n}$.
+
+To specify and solve this problem using `dbcp`,
+one may use the following code:
+
+```python
+import cvxpy as cp
+import dbcp
+
+X = cp.Variable((m, k), nonneg=True)
+Y = cp.Variable((k, n), nonneg=True)
+Z = cp.Variable((m, n))
+
+obj = cp.Minimize(cp.norm(X @ Y + Z - A, 'fro'))
+constraints = [cp.norm(Z, 'fro') <= 1]
+prob = dbcp.BiconvexProblem(obj, [[X], [Y]], constraints)
+
+prob.solve()
+```
+
 ## Citation
