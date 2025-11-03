@@ -43,7 +43,7 @@ def _(mo):
     mo.md(r"""
     ## Introduction
 
-    We consider the fiting problem of a logistic input-output hidden Markov model (IO-HMM) to some dataset.
+    We consider the fitting problem of a logistic input-output hidden Markov model (IO-HMM) to some dataset.
     Suppose we are given a dataset $(x(t), y(t))$, $t = 1, \ldots, m$, where each sample consists of an input feature vector $x(t) \in \mathbf{R}^n$ and an output label $y(t) \in \{0, 1\}$, generated from a $K$-state IO-HMM, according to the following procedure:
     Let $\hat{z}(t) \in \{1, \ldots, K\}$, $t = 1, \ldots, m$, be the state label of the IO-HMM with initial state distribution $p_{\rm init} \in \mathbf{R}^K$ with $\mathbf{1}^T p_{\rm init} = 1$ and transition matrix $P_{\rm tr} \in \mathbf{R}^{K \times K}$ with $P_{\rm tr} \mathbf{1} = \mathbf{1}$.
     At the time step $t$, the state label $\hat{z}(t)$ is sampled according to
