@@ -238,3 +238,16 @@ make marimo
 
 in the repository folder will install
 and start the [marimo](https://marimo.io/) environment.
+
+## Citation
+
+If you find DBCP useful in your research, please consider citing our paper:
+
+```bibtex
+@article{zhu2025dbcp,
+  title={Disciplined Biconvex Programming},
+  author={Zhu, H. and Boedecker, J.},
+  journal={arXiv Preprint arXiv:2511.01813},
+  year={2025},
+}
+```
