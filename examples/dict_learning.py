@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.17.6"
+__generated_with = "0.17.7"
 app = marimo.App(width="medium")
 
 
@@ -117,7 +117,7 @@ def _(mo):
 def _(cards, errs, plt):
     fig, axs = plt.subplots(1, 1, figsize=(4, 3))
     axs.plot(cards, errs, marker='.', color='k')
-    axs.set_xlabel(r'$\mathop{\bf card} Y$')
+    axs.set_xlabel(r'$\mathop{\bf card} X$')
     axs.set_ylabel('$||DX-Y||_F/||Y||_F$')
 
     plt.show()
