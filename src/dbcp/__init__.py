@@ -1,6 +1,7 @@
+from .atoms import convolve
 from .problem import BiconvexProblem, BiconvexRelaxProblem
 
-__all__ = ["BiconvexProblem", "BiconvexRelaxProblem", "__version__"]
+__all__ = ["BiconvexProblem", "BiconvexRelaxProblem", "convolve", "__version__"]
 
 try:
     from importlib.metadata import version, PackageNotFoundError
