@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.17.6"
+__generated_with = "0.17.7"
 app = marimo.App(width="medium")
 
 
@@ -21,7 +21,7 @@ def _():
     import marimo as mo
     import numpy as np
     import cvxpy as cp
-    from dbcp import BiconvexProblem
+    from dbcp import BiconvexProblem, convolve
 
     import matplotlib as mpl
     import matplotlib.pyplot as plt
@@ -35,7 +35,7 @@ def _():
         os.makedirs('./figures')
 
     np.random.seed(10015)
-    return BiconvexProblem, cp, mo, np, plt
+    return BiconvexProblem, convolve, cp, mo, np, plt
 
 
 @app.cell(hide_code=True)
@@ -109,16 +109,19 @@ def _(mo):
 
 
 @app.cell
-def _(BiconvexProblem, conv, cp, d, m, n):
+def _(BiconvexProblem, convolve, cp, d, m, n):
     alpha_sp = 0.1
     alpha_sm = 0.2
     beta = 1
 
     x = cp.Variable(n, nonneg=True)
     y = cp.Variable(m, nonneg=True)
-    obj = cp.sum_squares(conv(x, y) - d) + alpha_sp * cp.norm1(x) + alpha_sm * cp.sum_squares(cp.diff(y))
+    obj = cp.Minimize(
+        cp.sum_squares(convolve(x, y) - d)
+        + alpha_sp * cp.norm1(x)
+        + alpha_sm * cp.sum_squares(cp.diff(y)))
     constr = [cp.norm(y, "inf") <= beta]
-    prob = BiconvexProblem(cp.Minimize(obj), [[x], [y]], constr)
+    prob = BiconvexProblem(obj, [[x], [y]], constr)
     prob.solve(cp.CLARABEL, gap_tolerance=1e-5, max_iter=200)
     return x, y
 
@@ -155,17 +158,6 @@ def _(d, np, plt, x, x0, y, y0):
     plt.show()
     fig.savefig('./figures/blind_deconv.pdf', bbox_inches='tight')
     return
-
-
-@app.cell(hide_code=True)
-def _(cp):
-    def conv(x, y):
-        c = [0] * (x.shape[0] + y.shape[0] - 1)
-        for _i, _a in enumerate(y):
-            for _j, _b in enumerate(x):
-                c[_i + _j] += _a * _b
-        return cp.hstack(c)
-    return (conv,)
 
 
 if __name__ == "__main__":
