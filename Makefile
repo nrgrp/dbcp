@@ -15,9 +15,11 @@ install: venv ## install all dependencies using uv
 	@printf "$(BLUE)Installing dependencies...$(RESET)\n"
 	@uv sync --frozen
 
+.PHONY: test
 test: install ## run tests
 	uv run pytest tests
 
+.PHONY: marimo
 marimo: install ## start a Marimo server
 	@printf "$(BLUE)Start Marimo server...$(RESET)\n"
 	@uv run --with marimo marimo edit examples
